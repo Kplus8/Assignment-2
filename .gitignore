@@ -1,5 +1,8 @@
 # Prerequisites
 *.d
+*.opendb
+*.suo
+*.db
 
 # Compiled Object files
 *.slo
@@ -30,3 +33,5 @@
 *.exe
 *.out
 *.app
+
+*.ipch

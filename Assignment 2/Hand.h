@@ -1,4 +1,5 @@
 #pragma once
+#include "Card.cpp"
 class Hand
 {
 public:
@@ -10,5 +11,8 @@ public:
 	Card getCard(int n);
 	Hand GetVisible();
 	int evaluateHand();
+private:
+	Card mCards[5];
+	int mCount;
 };
 

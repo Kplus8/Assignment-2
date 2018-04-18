@@ -4,6 +4,7 @@
 
 AlphaPlayer::AlphaPlayer()
 {
+	mPot = 0;
 }
 
 

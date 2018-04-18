@@ -9,5 +9,9 @@ public:
 	int getCardValue();
 	bool isFaceup();
 	void setFaceup(bool set);
+private:
+	string mCardName;
+	int mCardValue;
+	bool mIsFaceUp;
 };
 
