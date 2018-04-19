@@ -13,6 +13,7 @@ public:
 
 	}
 	int getBet(Hand opponent, int bet2player, bool canRaise, int pot) const {
+		mHand.toString();
 		return 0;
 	}
 };

@@ -51,6 +51,15 @@ public:
 			score += mCards[i].getCardValue();
 		}
 		return score;
+
+
+	}
+	string toString() {
+		string out = "";
+		for (int i = 0; i < mCount; i++) {
+			out += mCards[i].getCardName() + " ";
+		}
+		return out;
 	}
 private:
 	Card mCards[5];

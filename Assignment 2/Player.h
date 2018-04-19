@@ -37,6 +37,10 @@ public:
 	int getChips() {
 		return mChips;
 	}
+	void addCard(Card card) {
+		mHand.addCard(card);
+	}
+
 protected:
 	int mID;
 	Hand mHand;

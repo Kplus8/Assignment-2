@@ -12,6 +12,7 @@ public:
 	bool playGame(PlayerType p0, PlayerType p1, int &chips0, int &chips1, bool reportFlag);
 private:
 	int mPot;
+	int deckTop;
 	array<Card, 52> mDeck;
 	//Card mDeck[52];
 	bool mReportFlag;

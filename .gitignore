@@ -3,7 +3,13 @@
 *.opendb
 *.suo
 *.db
-
+*.log
+*.tlog
+*.idb
+*.tdb
+*.ilk
+*.pdb
+**/debug/
 # Compiled Object files
 *.slo
 *.lo

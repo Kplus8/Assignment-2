@@ -13,7 +13,7 @@ public:
 	~Card() {
 
 	}
-	inline Card(string cardName, int cardValue)
+	Card(string cardName, int cardValue)
 	{
 		mCardValue = cardValue;
 		mCardName = cardName;
