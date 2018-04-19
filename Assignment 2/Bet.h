@@ -4,7 +4,7 @@ class Bet
 public:
 	Bet();
 	~Bet();
-	Bet(int player, int amount);
+	Bet(int, int);
 	int getPlayer();
 	int getAmount();
 private:
