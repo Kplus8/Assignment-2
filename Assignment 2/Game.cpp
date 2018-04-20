@@ -46,7 +46,9 @@ bool Game::playGame(PlayerType p0, PlayerType p1, int &chips0, int &chips1, bool
 
 	int rounds = 10;
 	for (rounds; rounds > 0; rounds--) {
+		cout << "Next Round\n";
 		PlayHand(play0, play1);
+		cout << "Next Round\n";
 		PlayHand(play1, play0);
 	}
 	return false;
@@ -88,15 +90,21 @@ bool Game::PlayHand(Player &p1, Player &p2)
 	}
 	canRaise = true;
 	numRaises = 0;
-	BetRound(p1, p2); //bet round 1
-	DealNewBid(p1, p2);
-	canRaise = true;
-	numRaises = 0;
-	BetRound(p2, p1); //bet round 2
-	DealNewBid(p1, p2);
-	canRaise = true;
-	numRaises = 0;
-	BetRound(p1, p2); //bet round 3
+	bool didFold = BetRound(p1, p2); //bet round 1
+	if (!didFold) {
+		DealNewBid(p1, p2);
+		canRaise = true;
+		numRaises = 0;
+		cout << "Next card\n";
+		didFold = BetRound(p2, p1); //bet round 2
+	}
+	if (!didFold) {
+		DealNewBid(p1, p2);
+		canRaise = true;
+		numRaises = 0;
+		cout << "Next card\n";
+		didFold = BetRound(p1, p2); //bet round 3
+	}
 
 	return false;
 }
@@ -250,6 +258,7 @@ int Game::BetRound(Player &p1, Player &p2)
 		if (p2Call == false) {
 			if (newBet == 0) {
 				fold = true;
+				return fold;
 			}
 			else if (newBet == lastBet) {
 				p1Call = true;//call
@@ -280,7 +289,7 @@ int Game::BetRound(Player &p1, Player &p2)
 		betHistory.push_back(Bet(p1.getID(), newBet));
 		lastBet = betHistory.back().getAmount();
 
-		if (!fold && (!p1Call || !p2Call)) {
+		if (!fold && !(!p1Call && !p2Call)) {
 			if (numRaises >= 3) {
 				canRaise = false;
 			}
@@ -326,7 +335,7 @@ int Game::BetRound(Player &p1, Player &p2)
 
 	
 
-	return 0;
+	return fold;
 }
 
 int main() {
