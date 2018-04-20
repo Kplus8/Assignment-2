@@ -12,8 +12,8 @@ public:
 	~AlphaPlayer() {
 
 	}
-	int getBet(Hand opponent, int bet2player, bool canRaise, int pot) const {
-		return 0;
+	int getBet(Hand opponent, int bet2player, vector<Bet> betHistory, bool canRaise, int pot) {
+		return 10;
 	}
 };
 #endif

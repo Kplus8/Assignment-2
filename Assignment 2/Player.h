@@ -3,9 +3,11 @@
 
 
 #include <iostream>
+#include <vector>
 #include <string>
 #include "Hand.h"
 #include "enum.h"
+#include "Bet.h"
 using namespace std;
 
 #pragma once
@@ -47,7 +49,9 @@ protected:
 	int mChips;
 
 public:
-	virtual int getBet(Hand opponent, int bet2player, bool canRaise, int pot) const = 0;
+	virtual int getBet(Hand opponent, int bet2player, vector<Bet> betHistory, bool canRaise, int pot) {
+		return 0;
+	}
 };
 
 #endif

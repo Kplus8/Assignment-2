@@ -26,6 +26,7 @@ public:
 		for (int i = 0; i < 5; i++) {
 			if (mCards[i].getCardValue() == 0) {
 				mCards[i] = card;
+				mCount++;
 				return;
 			}
 		}
@@ -57,7 +58,9 @@ public:
 	string toString() {
 		string out = "";
 		for (int i = 0; i < mCount; i++) {
-			out += mCards[i].getCardName() + " ";
+			if (mCards[i].getCardValue() != 0) {
+				out += mCards[i].getCardName() + " ";
+			}
 		}
 		return out;
 	}
