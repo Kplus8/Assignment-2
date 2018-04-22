@@ -65,7 +65,7 @@ bool Game::PlayHand(Player &p1, Player &p2)
 	betHistory.push_back(Bet(0, 0));
 	p1.setHand(Hand());
 	p2.setHand(Hand());
-	mPot = 20;
+	mPot += 20;
 
 	for (int i = 0; i < 3; i++, deckTop+=2) {
 		Card p1Deal = mDeck[deckTop];
@@ -90,21 +90,31 @@ bool Game::PlayHand(Player &p1, Player &p2)
 	}
 	canRaise = true;
 	numRaises = 0;
-	bool didFold = BetRound(p1, p2); //bet round 1
-	if (!didFold) {
+	int potSize = BetRound(p1, p2); //bet round 1
+	if (potSize != 0) {
 		DealNewBid(p1, p2);
 		canRaise = true;
 		numRaises = 0;
 		cout << "Next card\n";
-		didFold = BetRound(p2, p1); //bet round 2
+		potSize = BetRound(p2, p1); //bet round 2
 	}
-	if (!didFold) {
+	if (potSize != 0) {
 		DealNewBid(p1, p2);
 		canRaise = true;
 		numRaises = 0;
 		cout << "Next card\n";
-		didFold = BetRound(p1, p2); //bet round 3
+		potSize = BetRound(p1, p2); //bet round 3
 	}
+	if (p1.getHand().evaluateHand() > p2.getHand().evaluateHand()) { //if p1 wins
+		p1.setChips(p1.getChips() + mPot);
+		mPot = 0;
+	}
+	else if (p2.getHand().evaluateHand() > p1.getHand().evaluateHand()) { //if p2 wins
+		p2.setChips(p2.getChips() + mPot);
+		mPot = 0;
+	}
+
+	//tie has pot carry over
 
 	return false;
 }
@@ -202,7 +212,7 @@ int Game::BetRound(Player &p1, Player &p2)
 
 	//opening bet
 	newBet = p1.getBet(p2.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
-	if (newBet == 0) {
+	if (newBet == lastBet) {
 		p1Call = true;
 		raise = false;
 	} else {
@@ -211,14 +221,18 @@ int Game::BetRound(Player &p1, Player &p2)
 		p1Call = false;
 		numRaises++;
 	}
-	betHistory.push_back(Bet(p1.getID(), newBet));
-	lastBet = betHistory.back().getAmount();
+	lastBet = newBet - betHistory.back().getAmount();
+	betHistory.push_back(Bet(p1.getID(), lastBet));
+
+	cout << "Bet was " + to_string(lastBet) + '\n';
 	//p2 of opening bet
 	newBet = p2.getBet(p1.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
 	// If p1 was a raise////////////////////////////////
 	if (p1Call == false) {
-		if (newBet == 0) {
+		if (newBet == lastBet) {
 			fold = true;
+			p1.setChips(p1.getChips() + mPot);
+			mPot = 0;
 		} else if (newBet == lastBet) {
 			p2Call = true;//call
 			raise = false;
@@ -233,7 +247,7 @@ int Game::BetRound(Player &p1, Player &p2)
 		//end/////////////////////////////////////////
 	} else {
 		//If p1 was a check///////////////////////////
-		if (newBet == 0) {
+		if (newBet == lastBet) {
 			p2Call = true;
 			raise = false;
 		}
@@ -243,9 +257,9 @@ int Game::BetRound(Player &p1, Player &p2)
 			numRaises++;
 		}
 	}
-	betHistory.push_back(Bet(p2.getID(), newBet));
-	lastBet = betHistory.back().getAmount();
-
+	lastBet = newBet - betHistory.back().getAmount();
+	betHistory.push_back(Bet(p2.getID(), lastBet));
+	cout << "Bet was " + to_string(lastBet) + '\n';
 
 	while (!fold && (!p1Call || !p2Call)) {
 		if (numRaises >= 3) {
@@ -258,7 +272,8 @@ int Game::BetRound(Player &p1, Player &p2)
 		if (p2Call == false) {
 			if (newBet == 0) {
 				fold = true;
-				return fold;
+				p2.setChips(p2.getChips() + mPot);
+				mPot = 0;
 			}
 			else if (newBet == lastBet) {
 				p1Call = true;//call
@@ -275,7 +290,7 @@ int Game::BetRound(Player &p1, Player &p2)
 		}
 		else {
 			//If p2 was a check///////////////////////////
-			if (newBet == 0) {
+			if (newBet == lastBet) {
 				p1Call = true;
 				raise = false;
 			}
@@ -286,8 +301,9 @@ int Game::BetRound(Player &p1, Player &p2)
 				numRaises++;
 			}
 		}
-		betHistory.push_back(Bet(p1.getID(), newBet));
-		lastBet = betHistory.back().getAmount();
+		lastBet = newBet - betHistory.back().getAmount();
+		betHistory.push_back(Bet(p1.getID(), lastBet));
+		cout << "Bet was " + to_string(lastBet) + '\n';
 
 		if (!fold && !(!p1Call && !p2Call)) {
 			if (numRaises >= 3) {
@@ -300,6 +316,8 @@ int Game::BetRound(Player &p1, Player &p2)
 			if (p1Call == false) {
 				if (newBet == 0) {
 					fold = true;
+					p1.setChips(p1.getChips() + mPot);
+					mPot = 0;
 				}
 				else if (newBet == lastBet) {
 					p2Call = true;//call
@@ -316,7 +334,7 @@ int Game::BetRound(Player &p1, Player &p2)
 			}
 			else {
 				//If p1 was a check///////////////////////////
-				if (newBet == 0) {
+				if (newBet == lastBet) {
 					p2Call = true;
 					raise = false;
 				}
@@ -327,15 +345,14 @@ int Game::BetRound(Player &p1, Player &p2)
 					numRaises++;
 				}
 			}
-			betHistory.push_back(Bet(p2.getID(), newBet));
-			lastBet = betHistory.back().getAmount();
+			lastBet = newBet - betHistory.back().getAmount();
+			betHistory.push_back(Bet(p2.getID(), lastBet));
+			cout << "Bet was " + to_string(lastBet) + '\n';
 		}
 
 	}
 
-	
-
-	return fold;
+	return mPot;
 }
 
 int main() {
@@ -347,9 +364,9 @@ int main() {
 	int p1Chips = 1000;
 	int p2Chips = 1000;
 
-	cout << "enter 1 if player 1 is Human, and 2 if Alpha AI";
+	cout << "enter 1 if player 1 is Human, and 2 if Alpha AI: ";
 	cin >> p1Choice;
-	cout << "enter 1 if player 2 is Human, and 2 if Alpha AI";
+	cout << "enter 1 if player 2 is Human, and 2 if Alpha AI: ";
 	cin >> p2Choice;
 
 	if (p1Choice == 1) {
