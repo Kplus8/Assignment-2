@@ -12,37 +12,48 @@ public:
 	~HumanPlayer() {
 
 	}
+
+	//NOTE: was edited to be more in line with provided example code to ensure code works
 	int getBet(Hand opponent, int bet2player, vector<Bet> betHistory, bool canRaise, int pot) {
 		Hand displayHand = mHand;//some error prevented mHand from displaying directly
-		cout << "You have: " + displayHand.toString() + "and the pot is: "+ to_string(pot) + ".\n";
+		cout << "\n\n\n" << "You have: " + displayHand.toString() + "and the pot is: "+ to_string(pot) + ".\n";
 		cout << "You can See: " + opponent.toString() + "from the opponet's Hand." + '\n';
 		cout << "You Have: " + to_string(mChips) + " chips. \n";
-		int betAmnt = -2;
+		int betAmnt = 0;
 		cout << "Bet -1 to quit. You will be reprompted if you bet an illegal amount. \n";
-		while (betAmnt != 0 && betAmnt != -1 && (betAmnt < bet2player || betAmnt > bet2player+10)) {
+		while (true) {
+			int maxPBet = bet2player;
 			if (canRaise) {
-				cout << "Enter a bet amount. " + to_string(bet2player) + " is the previous bet." + '\n';
+				maxPBet += 10;
 			}
+			
+			//bet history
+			if (betHistory.size() >= 1) {
+				cout << endl << "Bet History" << endl;
 
-
-			if (betHistory.size() == 1) {
-				cout << "bet 0 to check.\n";
-			}
-			else {
-				cout << "Bet " + to_string(bet2player) + " to call. \n";
+				for (int i = 0; i < betHistory.size(); i++) {
+					cout << "Player: " << betHistory[i].getPlayer() << " Bet: " << betHistory[i].getAmount() << endl;
+				}
 			}
 
 			if (bet2player > 0) {
-				cout << "Bet 0 to fold.\n";
+				cout << "Bet 0 to fold or bet " << bet2player << " to " << maxPBet << "." << endl;
+			} else {
+				cout << "Bet 0 to call or bet up to " << maxPBet << " to raise." << endl;
 			}
-
+			
+			cout << "Enter your bet: ";
 			cin >> betAmnt;
+
+
+			if (betAmnt == 0 || betAmnt == -1 || (betAmnt >= bet2player && betAmnt <= maxPBet)) {
+				break;
+			}
 		}
+
+
 		setChips(mChips - betAmnt);
-		if (betAmnt == -1) {
-			exit(0);
-		}
-		return betAmnt + bet2player;
+		return betAmnt;
 	}
 };
 

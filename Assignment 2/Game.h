@@ -12,6 +12,8 @@ public:
 	Game();
 	~Game();
 	bool playGame(PlayerType p0, PlayerType p1, int &chips0, int &chips1, bool reportFlag);
+	bool RunGame(bool reportFlag, int & chips0, int & chips1, Player & play0, Player & play1);
+	bool mReportFlag;
 private:
 	int mPot;
 	int deckTop;
@@ -19,8 +21,6 @@ private:
 	bool canRaise = true;
 	int numRaises = 0;
 	array<Card, 52> mDeck;
-	//Card mDeck[52];
-	bool mReportFlag;
 	bool PlayHand(Player &p1, Player &p2);
 	void DealNewBid(Player & p1, Player & p2);
 public:

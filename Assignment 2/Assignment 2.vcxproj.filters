@@ -44,5 +44,8 @@
     <ClInclude Include="HumanPlayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BetaPlayer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

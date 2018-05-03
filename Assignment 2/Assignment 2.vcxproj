@@ -122,6 +122,7 @@
   <ItemGroup>
     <ClInclude Include="AlphaPlayer.h" />
     <ClInclude Include="Bet.h" />
+    <ClInclude Include="BetaPlayer.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Hand.h" />

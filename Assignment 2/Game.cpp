@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "HumanPlayer.h"
 #include "AlphaPlayer.h"
+#include "BetaPlayer.h"
 #include "enum.h"
 using namespace std;
 
@@ -22,47 +23,92 @@ Game::~Game()
 
 bool Game::playGame(PlayerType p0, PlayerType p1, int &chips0, int &chips1, bool reportFlag)
 {
-
-
-	HumanPlayer play0;
-
-	if (p0 == ALPHA) {
-		AlphaPlayer play0;
-
-	}
-
-	play0.setChips(chips0);
-	play0.setID(0);
-
-	AlphaPlayer play1;
-
-	if (p1 == ALPHA) {
+	mReportFlag = reportFlag;
+	if (p0 == HUMAN && p1 == ALPHA) {
+		HumanPlayer play0;
 		AlphaPlayer play1;
+		play0.setChips(chips0);
+		play1.setChips(chips1);
+		play1.setID(1);
+		return RunGame(reportFlag, chips0, chips1, play0, play1);
+
+	} else if (p0 == ALPHA && p1 == ALPHA) {
+		AlphaPlayer play0;
+		AlphaPlayer play1;
+		play0.setChips(chips0);
+		play1.setChips(chips1);
+		play1.setID(1);
+		return RunGame(reportFlag, chips0, chips1, play0, play1);
+	} else if (p0 == HUMAN && p1 == BETA) {
+		HumanPlayer play0;
+		BetaPlayer play1;
+		play0.setChips(chips0);
+		play1.setChips(chips1);
+		play1.setID(1);
+		return RunGame(reportFlag, chips0, chips1, play0, play1);
+	} else if (p0 == ALPHA && p1 == BETA) {
+		AlphaPlayer play0;
+		BetaPlayer play1;
+		play0.setChips(chips0);
+		play1.setChips(chips1);
+		play1.setID(1);
+		return RunGame(reportFlag, chips0, chips1, play0, play1);
+	}
+	else if (p1 == ALPHA && p0 == BETA) {
+		AlphaPlayer play1;
+		BetaPlayer play0;
+		play0.setChips(chips0);
+		play1.setChips(chips1);
+		play1.setID(1);
+		return RunGame(reportFlag, chips0, chips1, play0, play1);
 	}
 
-	play1.setChips(chips1);
-	play1.setID(1);
+	return false;
+}
 
-
+bool Game::RunGame(bool reportFlag, int & chips0, int & chips1, Player &play0, Player &play1)
+{
 	int rounds = 10;
 	for (rounds; rounds > 0; rounds--) {
-		cout << "Next Round\n";
-		PlayHand(play0, play1);
-		cout << "Next Round\n";
-		PlayHand(play1, play0);
+		if (mReportFlag) {
+			cout << "Next Round\n"; \
+		}
+		bool quit = PlayHand(play0, play1);
+		if (quit == true) {
+			return true;
+		}
+		if (mReportFlag) {
+			cout << "Next Round\n";
+		}
+		quit = PlayHand(play1, play0);
+		if (quit == true) {
+			return true;
+		}
 	}
+
+	if (mPot >= 0) {
+		play1.setChips(play1.getChips() + mPot / 2);
+		play0.setChips(play0.getChips() + mPot / 2);
+		mPot = 0;
+	}
+
+	if (reportFlag) {
+		cout << "Game Finished. Player 0 had: " << play0.getChips() << " chips and Player 1 had " << play1.getChips() << " chips." << endl;
+	}
+	chips0 = play0.getChips();
+	chips1 = play1.getChips();
 	return false;
 }
 
 
 bool Game::PlayHand(Player &p1, Player &p2)
 {
+	bool quit = false;
 	deckTop = 0;
 	ShuffleDeck();
 	p1.setChips(p1.getChips() - 10);
 	p2.setChips(p2.getChips() - 10);
 	betHistory.clear();
-	betHistory.push_back(Bet(0, 0));
 	p1.setHand(Hand());
 	p2.setHand(Hand());
 	mPot += 20;
@@ -90,33 +136,54 @@ bool Game::PlayHand(Player &p1, Player &p2)
 	}
 	canRaise = true;
 	numRaises = 0;
-	int potSize = BetRound(p1, p2); //bet round 1
-	if (potSize != 0) {
-		DealNewBid(p1, p2);
-		canRaise = true;
-		numRaises = 0;
-		cout << "Next card\n";
-		potSize = BetRound(p2, p1); //bet round 2
-	}
-	if (potSize != 0) {
-		DealNewBid(p1, p2);
-		canRaise = true;
-		numRaises = 0;
-		cout << "Next card\n";
-		potSize = BetRound(p1, p2); //bet round 3
-	}
-	if (p1.getHand().evaluateHand() > p2.getHand().evaluateHand()) { //if p1 wins
-		p1.setChips(p1.getChips() + mPot);
-		mPot = 0;
-	}
-	else if (p2.getHand().evaluateHand() > p1.getHand().evaluateHand()) { //if p2 wins
-		p2.setChips(p2.getChips() + mPot);
-		mPot = 0;
+
+	//NOTE: was edited to be more in line with provided example code to ensure code works
+	for (int round = 0; round < 3; round++) {
+		int result = BetRound(p1, p2);
+		if (result == -2) {
+			quit = true;
+			break;
+		}
+
+		if (result >= 0) {
+			if (mReportFlag) {
+				cout << "Player " << (1 - result) << " folded. The pot was " << mPot << "." << endl;
+			}
+			if (result == p1.getID()) {
+				p1.setChips(p1.getChips() + mPot);
+			}
+			else {
+				p2.setChips(p2.getChips() + mPot);
+			}
+			mPot = 0;
+			break;
+		}
+
+		if (round < 2) {
+			DealNewBid(p1, p2);
+		} else {
+			int p1score = p1.getHand().evaluateHand();
+			int p2score = p2.getHand().evaluateHand();
+			if (mReportFlag) {
+				if (p1score > p2score) {
+					cout << "Player " << p1.getID() << " won the hand with a pot of " << mPot << endl;
+					p1.setChips(p1.getChips() + mPot);
+					mPot = 0;
+				}
+				else if (p2score > p1score) {
+					cout << "Player " << p2.getID() << " won the hand with a pot of " << mPot << endl;
+					p2.setChips(p2.getChips() + mPot);
+					mPot = 0;
+				}
+				else {
+					cout << "It was a tie, the pot will carry over." << endl;
+				}
+			}
+		}
+
 	}
 
-	//tie has pot carry over
-
-	return false;
+	return quit;
 }
 
 void Game::DealNewBid(Player & p1, Player & p2)
@@ -204,187 +271,129 @@ int Game::BetRound(Player &p1, Player &p2)
 {
 	int output = 0;
 	int newBet = 0;
-	int lastBet = betHistory.back().getAmount();
+	int bet2player = 0;
+	canRaise = true;
 	bool raise = false;
 	bool fold = false;
 	bool p1Call = false;
 	bool p2Call = false;
 
-	//opening bet
-	newBet = p1.getBet(p2.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
-	if (newBet == lastBet) {
-		p1Call = true;
-		raise = false;
-	} else {
+	//NOTE: was edited to be more in line with provided example code to ensure code works
+	while (true) {
+		
+		//first player
+		newBet = p1.getBet(p2.getHand().GetVisible(), bet2player, betHistory, canRaise, mPot);
+
+		if (newBet == -1) {
+			return -2;
+		}
+
+		betHistory.push_back(Bet(p1.getID(), newBet));
+
+		//if not call or raise
+		if (newBet < bet2player) {
+			return p2.getID();
+		}
+
 		mPot += newBet;
-		raise = true;
-		p1Call = false;
-		numRaises++;
-	}
-	lastBet = newBet - betHistory.back().getAmount();
-	betHistory.push_back(Bet(p1.getID(), lastBet));
+		bet2player = newBet - bet2player;
 
-	cout << "Bet was " + to_string(lastBet) + '\n';
-	//p2 of opening bet
-	newBet = p2.getBet(p1.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
-	// If p1 was a raise////////////////////////////////
-	if (p1Call == false) {
-		if (newBet == lastBet) {
-			fold = true;
-			p1.setChips(p1.getChips() + mPot);
-			mPot = 0;
-		} else if (newBet == lastBet) {
-			p2Call = true;//call
-			raise = false;
-			mPot += newBet;
-		}
-		else if (newBet > lastBet) {
-			p2Call = false;
-			raise = true;//raise
+		//if a call
+		if (bet2player == 0) {
+			break;
+		} else {
 			numRaises++;
-			mPot += newBet;
-		}
-		//end/////////////////////////////////////////
-	} else {
-		//If p1 was a check///////////////////////////
-		if (newBet == lastBet) {
-			p2Call = true;
-			raise = false;
-		}
-		else {
-			mPot += newBet;
-			raise = true;
-			numRaises++;
-		}
-	}
-	lastBet = newBet - betHistory.back().getAmount();
-	betHistory.push_back(Bet(p2.getID(), lastBet));
-	cout << "Bet was " + to_string(lastBet) + '\n';
-
-	while (!fold && (!p1Call || !p2Call)) {
-		if (numRaises >= 3) {
-			canRaise = false;
-		}
-		
-		
-		newBet = p1.getBet(p2.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
-		// If p2 was a raise////////////////////////////////
-		if (p2Call == false) {
-			if (newBet == 0) {
-				fold = true;
-				p2.setChips(p2.getChips() + mPot);
-				mPot = 0;
-			}
-			else if (newBet == lastBet) {
-				p1Call = true;//call
-				raise = false;
-				mPot += newBet;
-			}
-			else if (newBet > lastBet && canRaise) {
-				p1Call = false;
-				raise = true;
-				numRaises++;
-				mPot += newBet;
-			}
-			//end/////////////////////////////////////////
-		}
-		else {
-			//If p2 was a check///////////////////////////
-			if (newBet == lastBet) {
-				p1Call = true;
-				raise = false;
-			}
-			else if(canRaise) {
-				mPot += newBet;
-				p1Call = false;
-				raise = true;
-				numRaises++;
-			}
-		}
-		lastBet = newBet - betHistory.back().getAmount();
-		betHistory.push_back(Bet(p1.getID(), lastBet));
-		cout << "Bet was " + to_string(lastBet) + '\n';
-
-		if (!fold && !(!p1Call && !p2Call)) {
 			if (numRaises >= 3) {
 				canRaise = false;
 			}
+		}
+		
+		//second player
+		newBet = p2.getBet(p1.getHand().GetVisible(), bet2player, betHistory, canRaise, mPot);
 
+		if (newBet == -1) {
+			return -2;
+		}
 
-			newBet = p2.getBet(p1.getHand().GetVisible(), lastBet, betHistory, canRaise, mPot);
-			// If p1 was a raise////////////////////////////////
-			if (p1Call == false) {
-				if (newBet == 0) {
-					fold = true;
-					p1.setChips(p1.getChips() + mPot);
-					mPot = 0;
-				}
-				else if (newBet == lastBet) {
-					p2Call = true;//call
-					raise = false;
-					mPot += newBet;
-				}
-				else if (newBet > lastBet && canRaise) {
-					p2Call = false;
-					raise = true;
-					numRaises++;
-					mPot += newBet;
-				}
-				//end/////////////////////////////////////////
+		betHistory.push_back(Bet(p2.getID(), newBet));
+
+		//if not call or raise
+		if (newBet < bet2player) {
+			return p1.getID();
+		}
+
+		mPot += newBet;
+		bet2player = newBet - bet2player;
+
+		//if a call
+		if (bet2player == 0) {
+			break;
+		}
+		else {
+			numRaises++;
+			if (numRaises >= 3) {
+				canRaise = false;
 			}
-			else {
-				//If p1 was a check///////////////////////////
-				if (newBet == lastBet) {
-					p2Call = true;
-					raise = false;
-				}
-				else if (canRaise) {
-					mPot += newBet;
-					p2Call = false;
-					raise = true;
-					numRaises++;
-				}
-			}
-			lastBet = newBet - betHistory.back().getAmount();
-			betHistory.push_back(Bet(p2.getID(), lastBet));
-			cout << "Bet was " + to_string(lastBet) + '\n';
 		}
 
 	}
 
-	return mPot;
+	return -1;
 }
 
 int main() {
 	Game playing;
 
 	int p1Choice, p2Choice;
+	bool report = true;
+	int betaCounter = 0;
+	int betaTests = 100;
 	PlayerType p1;
 	PlayerType p2;
 	int p1Chips = 1000;
 	int p2Chips = 1000;
-
-	cout << "enter 1 if player 1 is Human, and 2 if Alpha AI: ";
+	cout << "Choosing the alpha for p1, and the beta for p2, will show the results of 100 consecutive matches." << endl << endl;
+	cout << "enter 1 if player 1 is Human, 2 if Alpha: ";
 	cin >> p1Choice;
-	cout << "enter 1 if player 2 is Human, and 2 if Alpha AI: ";
+	cout << "enter 2 if player 2 is Alpha, and 3 if Beta: ";
 	cin >> p2Choice;
 
 	if (p1Choice == 1) {
 		p1 = HUMAN;
+		report = true;
 	}
 	else if (p1Choice == 2) {
 		p1 = ALPHA;
+		report = false;
 	}
 
-	if (p2Choice == 1) {
-		p2 = HUMAN;
-	}
-	else if (p2Choice == 2) {
+	if (p2Choice == 2) {
 		p2 = ALPHA;
+	}
+	else if (p2Choice == 3) {
+		p2 = BETA;
 	}
 
 	cout << '\n';
 	cin.get();
-	playing.playGame(p1, p2, p1Chips, p2Chips, false);
+	if (p1 == ALPHA && p2 == BETA) {
+		for (int j = 0; j < betaTests; j++) {
+			p1Chips = 1000;
+			p2Chips = 1000;
+			for (int i = 0; i < 100; i++) {
+				playing.playGame(p2, p1, p2Chips, p1Chips, report);
+			}
+			if (p1Chips < p2Chips) {
+				betaCounter++;
+			}
+			cout << "Game Finished. Alpha Player had: " << p1Chips << " chips and Beta player had " << p2Chips << " chips." << endl;
+		}
+
+		cout << "The Beta AI won " << betaCounter << " games out of " << betaTests;
+	}
+	else {
+		playing.playGame(p1, p2, p1Chips, p2Chips, report);
+	}
 	cin.get();
+	return 0;
 }

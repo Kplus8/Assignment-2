@@ -1,24 +1,27 @@
-#ifndef ALPHA_PLAYER
-#define ALPHA_PLAYER
+#ifndef BETA_PLAYER
+#define BETA_PLAYER
 #pragma once
 #include "Player.h"
+#include <random>
 #include <vector>
-class AlphaPlayer :
+class BetaPlayer :
 	public Player
 {
 public:
-	AlphaPlayer() {
+	BetaPlayer() {
 
 	}
-	~AlphaPlayer() {
+	~BetaPlayer() {
 
 	}
-	//NOTE: was edited to be more in line with provided example code to ensure code works
+	//NOTE: taken from alpha player and so is partially edited from example code
 	int getBet(Hand opponent, int bet2player, vector<Bet> betHistory, bool canRaise, int pot) {
+		int bluff = rand() % 10;
 		int delta = mHand.evaluateHand() - opponent.evaluateHand();
 		int bet = 0;
 		int numBets = betHistory.size();
 		int potFactor = pot / 10;
+
 		//first 2 rounds
 		if (mHand.getCount() < 5) {
 			if (numBets == 0) {
@@ -139,6 +142,10 @@ public:
 					}
 				}
 			}
+		}
+
+		if (bluff < 2) { //bluffs 20% of the time (if rand num is 1 or 0, makes max bet possible)
+			bet = bet2player + 10;
 		}
 
 		if (!canRaise && bet > bet2player) {
